@@ -1,0 +1,30 @@
+<!-- templates/product_list.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>商品一覧</title>
+    <!-- ここにCSSスタイルをインラインで定義 -->
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        td + td, th + th {
+            border-left: 1px solid #dddddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>商品一覧</h1>
+    <a href="/">画像認識入力画面に戻る</a>
+    <a href="/onsei">音声認識入力画面に戻る</a>
+    <!-- データが埋め込まれる部分 -->
+    {{ table_html | safe }}
+    
+</body>
+</html>

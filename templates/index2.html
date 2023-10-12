@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>サイズ入力システム</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='noselect.css') }}">
+</head>
+
+<body>
+    <div id="my_container">
+        <div id="my_inner">
+            <div class="datalist">
+                <a href="/list">商品一覧</a>
+                <a href="/">画像認識</a>
+            </div>
+            <div id="my_quagga"></div>
+            <!-- フォームを追加 -->
+            <div class="menu">
+                <form id="textForm" action="/record" method="post">
+                    <input type="text" name="zf330" id="input0" value="" required>
+                    <button id="button0" class="custom-button" type="button">商品コード</button>
+                    <div>
+                        <input type="text" id="input1" name="new_height" placeholder="縦" maxlength="4"
+                            oninput="value = value.replace(/[^0-9]+/i,'');" required>
+                        <button id="button1" class="custom-button" type="button">縦</button>
+                    </div>
+                    <div>
+                        <input type="text" id="input2" name="new_width" placeholder="横" maxlength="4"
+                            oninput="value = value.replace(/[^0-9]+/i,'');" required>
+                        <button id="button2" class="custom-button" type="button">横</button>
+                    </div>
+                    <div>
+                        <input type="text" id="input3" name="new_length" placeholder="高さ" maxlength="4"
+                            oninput="value = value.replace(/[^0-9]+/i,'');" required>
+                        <button id="button3" class="custom-button" type="button">高さ</button>
+                    </div>
+                    <button type="submit" id="startRecognition">送信</button>
+                </form>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script>
+        const textForm = document.getElementById("textForm");
+        const apiUrl = "/process";  // Flaskサーバーのエンドポイント
+
+        // タッチデバイスと非タッチデバイスの判定
+        const isTouchDevice = 'ontouchstart' in window;
+
+        // ボタンごとの長押しまたはクリックイベントを設定
+        const buttons = [document.getElementById("button1"), document.getElementById("button2"), document.getElementById("button3")];
+
+        buttons.forEach((button, index) => {
+            const textInput = document.getElementById(`input${index + 1}`);
+
+            button.addEventListener(isTouchDevice ? 'touchstart' : 'mousedown', function () {
+                handleButtonPress(apiUrl,index);
+            });
+        });
+        document.getElementById("button0").addEventListener(isTouchDevice ? 'touchstart' : 'mousedown', function () {
+                handleButtonPress('/process2',-1);
+        });
+
+        // ボタンが押されたときの処理
+        function handleButtonPress(url,index) {
+            // 音声認識を実行（ブラウザのWeb Speech APIを使用）
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'ja-JP';  // 適切な言語に設定
+
+            recognition.onresult = function (event) {
+                const result = event.results[0][0].transcript;
+                console.log('認識結果:', result);
+
+                // 対応するテキストフィールドに認識結果を入力
+                const textField = document.getElementById(`input${index + 1}`);
+                textField.value = result;
+
+                // テキストをサーバーに送信
+                sendDataToServer(url,result, textField);
+            };
+
+            recognition.onerror = function (event) {
+                console.error('音声認識エラー:', event.error);
+                // textInput.value = "音声認識エラーが発生しました。";
+            };
+
+            // 音声認識を開始
+            recognition.start();
+        }
+
+        
+        // テキストをサーバーに送信する関数
+        function sendDataToServer(url,text, textField) {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('サーバーからの応答:', data);
+                    // データをテキストフィールドに設定
+                    textField.value = data.result;
+                })
+                .catch(error => {
+                    console.error('サーバーへのリクエストエラー:', error);
+                });
+        }
+    </script>
+</body>
+
+</html>
